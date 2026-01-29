@@ -68,12 +68,12 @@
       
       <v-card-text class="pt-4">
         <v-progress-linear
-          v-if="loadingPosts"
+          v-if="postsStore.loading"
           indeterminate
           color="primary"
         ></v-progress-linear>
 
-        <div v-else-if="posts.length === 0" class="text-center py-8 text-grey">
+        <div v-else-if="postsStore.posts.length === 0" class="text-center py-8 text-grey">
           <v-icon size="64" class="mb-3">mdi-post-outline</v-icon>
           <p class="text-h6">No posts yet</p>
           <p class="text-body-2">Create your first post above!</p>
@@ -81,9 +81,10 @@
 
         <v-list v-else lines="three">
           <v-list-item
-            v-for="(postItem, index) in posts"
+            v-for="(postItem, index) in postsStore.posts"
             :key="postItem.id"
             class="mb-3"
+            :class="{ 'optimistic-post': postItem._optimistic }"
           >
             <template v-slot:prepend>
               <v-avatar color="primary" class="text-white">
@@ -105,7 +106,7 @@
               </v-chip>
             </template>
 
-            <v-divider v-if="index < posts.length - 1" class="mt-3"></v-divider>
+            <v-divider v-if="index < postsStore.posts.length - 1" class="mt-3"></v-divider>
           </v-list-item>
         </v-list>
       </v-card-text>
@@ -114,18 +115,20 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { usePostsStore } from '../stores/postsStore';
 
 export default {
   name: 'CreatePost',
+  setup() {
+    const postsStore = usePostsStore();
+    return { postsStore };
+  },
   data() {
     return {
       valid: false,
       loading: false,
-      loadingPosts: false,
       successMessage: '',
       errorMessage: '',
-      posts: [],
       post: {
         title: '',
         body: ''
@@ -142,20 +145,9 @@ export default {
     };
   },
   mounted() {
-    this.fetchPosts();
+    this.postsStore.fetchPosts();
   },
   methods: {
-    async fetchPosts() {
-      this.loadingPosts = true;
-      try {
-        const response = await axios.get('/api/posts');
-        this.posts = response.data;
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      } finally {
-        this.loadingPosts = false;
-      }
-    },
     async submitPost() {
       // Validate form
       const { valid } = await this.$refs.form.validate();
@@ -168,31 +160,23 @@ export default {
       this.successMessage = '';
       this.errorMessage = '';
 
-      try {
-        const response = await axios.post('/api/posts', {
-          title: this.post.title,
-          body: this.post.body
-        });
+      // Call store action (optimistic update happens inside)
+      const result = await this.postsStore.createPost({
+        title: this.post.title,
+        body: this.post.body
+      });
 
+      this.loading = false;
+
+      if (result.success) {
         this.successMessage = 'Post created successfully!';
         
         // Reset form
         this.post.title = '';
         this.post.body = '';
         this.$refs.form.reset();
-
-        // Refresh posts list
-        await this.fetchPosts();
-
-      } catch (error) {
-        if (error.response && error.response.data && error.response.data.errors) {
-          const errors = Object.values(error.response.data.errors).flat();
-          this.errorMessage = errors.join(', ');
-        } else {
-          this.errorMessage = 'Failed to create post. Please try again.';
-        }
-      } finally {
-        this.loading = false;
+      } else {
+        this.errorMessage = result.error;
       }
     },
     formatDate(dateString) {
@@ -230,5 +214,10 @@ export default {
 .text-wrap {
   white-space: normal !important;
   word-break: break-word;
+}
+
+.optimistic-post {
+  opacity: 0.6;
+  transition: opacity 0.3s;
 }
 </style>
