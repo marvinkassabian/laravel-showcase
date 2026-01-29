@@ -8,6 +8,5 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     CreatePost: typeof import('./components/CreatePost.vue')['default']
-    ExampleComponent: typeof import('./components/ExampleComponent.vue')['default']
   }
 }

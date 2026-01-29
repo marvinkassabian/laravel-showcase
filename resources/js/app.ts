@@ -6,7 +6,6 @@ import * as directives from 'vuetify/directives';
 import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css';
 
-import ExampleComponent from './components/ExampleComponent.vue';
 import CreatePost from './components/CreatePost.vue';
 
 const pinia = createPinia();
@@ -21,7 +20,6 @@ const vuetify = createVuetify({
 
 createApp({
     components: {
-        ExampleComponent,
         CreatePost
     }
 }).use(pinia).use(vuetify).mount('#app');
