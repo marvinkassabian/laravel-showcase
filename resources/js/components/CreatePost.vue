@@ -114,92 +114,103 @@
   </v-container>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { usePostsStore } from '../stores/postsStore';
+import type { Post } from '../models/Post';
 
-export default {
-  name: 'CreatePost',
-  setup() {
-    const postsStore = usePostsStore();
-    return { postsStore };
-  },
-  data() {
-    return {
-      valid: false,
-      loading: false,
-      successMessage: '',
-      errorMessage: '',
-      post: {
-        title: '',
-        body: ''
-      },
-      titleRules: [
-        v => !!v || 'Title is required',
-        v => (v && v.length >= 3) || 'Title must be at least 3 characters',
-        v => (v && v.length <= 255) || 'Title must be less than 255 characters'
-      ],
-      bodyRules: [
-        v => !!v || 'Body is required',
-        v => (v && v.length >= 10) || 'Body must be at least 10 characters'
-      ]
-    };
-  },
-  mounted() {
-    this.postsStore.fetchPosts();
-  },
-  methods: {
-    async submitPost() {
-      // Validate form
-      const { valid } = await this.$refs.form.validate();
-      
-      if (!valid) {
-        return;
-      }
+const postsStore = usePostsStore();
 
-      this.loading = true;
-      this.successMessage = '';
-      this.errorMessage = '';
+// Form state
+const form = ref<any>(null);
+const valid = ref<boolean>(false);
+const loading = ref<boolean>(false);
+const successMessage = ref<string>('');
+const errorMessage = ref<string>('');
 
-      // Call store action (optimistic update happens inside)
-      const result = await this.postsStore.createPost({
-        title: this.post.title,
-        body: this.post.body
-      });
+// Post data
+interface PostFormData {
+  title: string;
+  body: string;
+}
 
-      this.loading = false;
+const post = ref<PostFormData>({
+  title: '',
+  body: ''
+});
 
-      if (result.success) {
-        this.successMessage = 'Post created successfully!';
-        
-        // Reset form
-        this.post.title = '';
-        this.post.body = '';
-        this.$refs.form.reset();
-      } else {
-        this.errorMessage = result.error;
-      }
-    },
-    formatDate(dateString) {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
+// Validation rules
+type ValidationRule = (v: string) => boolean | string;
 
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins} min ago`;
-      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-      
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-    }
+const titleRules: ValidationRule[] = [
+  (v: string) => !!v || 'Title is required',
+  (v: string) => (v && v.length >= 3) || 'Title must be at least 3 characters',
+  (v: string) => (v && v.length <= 255) || 'Title must be less than 255 characters'
+];
+
+const bodyRules: ValidationRule[] = [
+  (v: string) => !!v || 'Body is required',
+  (v: string) => (v && v.length >= 10) || 'Body must be at least 10 characters'
+];
+
+// Lifecycle
+onMounted(() => {
+  postsStore.fetchPosts();
+});
+
+// Methods
+const submitPost = async (): Promise<void> => {
+  // Validate form
+  const { valid: isValid } = await form.value.validate();
+  
+  if (!isValid) {
+    return;
+  }
+
+  loading.value = true;
+  successMessage.value = '';
+  errorMessage.value = '';
+
+  // Call store action (optimistic update happens inside)
+  const result = await postsStore.createPost({
+    title: post.value.title,
+    body: post.value.body
+  });
+
+  loading.value = false;
+
+  if (result.success) {
+    successMessage.value = 'Post created successfully!';
+    
+    // Reset form
+    post.value.title = '';
+    post.value.body = '';
+    form.value.reset();
+  } else {
+    errorMessage.value = result.error || 'An error occurred';
   }
 };
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
 </script>
 
 <style scoped>
