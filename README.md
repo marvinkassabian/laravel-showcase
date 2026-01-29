@@ -1,59 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Showcase - Command Cheatsheet
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Getting Started
 
-## About Laravel
+### Install Dependencies
+```bash
+composer install
+npm install
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Setup Environment
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Development
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Start Laravel Backend
+```bash
+php artisan serve
+# Runs on http://localhost:8000
+```
 
-## Learning Laravel
+### Start Frontend Dev Server
+```bash
+npm run dev
+# Runs on http://localhost:5173
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Both Together (in separate terminals)
+```bash
+# Terminal 1
+php artisan serve
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# Terminal 2
+npm run dev
+```
 
-## Laravel Sponsors
+## Database
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Run Migrations
+```bash
+php artisan migrate
+```
 
-### Premium Partners
+### Rollback Last Migration
+```bash
+php artisan migrate:rollback
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Rollback All Migrations
+```bash
+php artisan migrate:reset
+```
 
-## Contributing
+### Refresh Database (rollback + migrate)
+```bash
+php artisan migrate:refresh
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Seed Database
+```bash
+php artisan db:seed
+```
 
-## Code of Conduct
+### Fresh Database (reset + migrate + seed)
+```bash
+php artisan migrate:fresh --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Generate New Resources
 
-## Security Vulnerabilities
+### Create Migration
+```bash
+php artisan make:migration create_table_name_table
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Create Model
+```bash
+php artisan make:model ModelName
+```
 
-## License
+### Create Model with Migration and Factory
+```bash
+php artisan make:model ModelName -m -f
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Create Controller
+```bash
+php artisan make:controller ControllerName
+```
+
+### Create Resource Controller (with all methods)
+```bash
+php artisan make:controller ControllerName --resource
+```
+
+### Create Factory
+```bash
+php artisan make:factory FactoryName
+```
+
+### Create Seeder
+```bash
+php artisan make:seeder SeederName
+```
+
+## Frontend
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Format Code
+```bash
+npm run format
+```
+
+### Type Check
+```bash
+npm run type-check
+```
+
+## Testing
+
+### Run PHPUnit Tests
+```bash
+php artisan test
+```
+
+### Run Specific Test
+```bash
+php artisan test tests/Feature/ExampleTest.php
+```
+
+## Artisan Tinker
+
+### Interactive Shell
+```bash
+php artisan tinker
+```
+
+Then in the shell:
+```php
+# Create a post
+Post::create(['title' => 'Test', 'content' => 'Content'])
+
+# Get all posts
+Post::all()
+
+# Find by ID
+Post::find(1)
+
+# Delete
+Post::destroy(1)
+```
+
+## Cache & Views
+
+### Clear All Caches
+```bash
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+```
+
+### Clear Route Cache
+```bash
+php artisan route:cache
+```
+
+## Git Workflow
+
+### Conventional Commits
+```bash
+# Feature
+git commit -m "feat: add new feature"
+
+# Bug fix
+git commit -m "fix: resolve issue"
+
+# Refactor
+git commit -m "refactor: restructure code"
+
+# Chore
+git commit -m "chore: update dependencies"
+```
