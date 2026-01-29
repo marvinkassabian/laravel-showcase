@@ -14,6 +14,11 @@ interface CreatePostResult {
   error?: string;
 }
 
+interface DeletePostResult {
+  success: boolean;
+  error?: string;
+}
+
 export const usePostsStore = defineStore('posts', {
   state: (): PostsState => ({
     posts: [],
@@ -83,6 +88,30 @@ export const usePostsStore = defineStore('posts', {
         }
         
         return { success: false, error: 'Failed to create post. Please try again.' };
+      }
+    },
+
+    async deletePost(postId: number): Promise<DeletePostResult> {
+      try {
+        // Remove post from UI optimistically
+        const index = this.posts.findIndex(p => p.id === postId);
+        const removedPost = index !== -1 ? this.posts[index] : null;
+        if (index !== -1) {
+          this.posts.splice(index, 1);
+        }
+
+        // Make actual API call
+        await axios.delete(`/api/posts/${postId}`);
+
+        return { success: true };
+      } catch (error) {
+        // Add post back on failure
+        if (removedPost) {
+          this.posts.push(removedPost);
+        }
+
+        this.error = 'Failed to delete post';
+        return { success: false, error: 'Failed to delete post. Please try again.' };
       }
     }
   }

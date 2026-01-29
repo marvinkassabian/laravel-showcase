@@ -101,9 +101,19 @@
             </v-list-item-subtitle>
 
             <template v-slot:append>
-              <v-chip size="small" color="grey-lighten-2">
-                {{ formatDate(postItem.created_at) }}
-              </v-chip>
+              <div class="flex-center-gap">
+                <v-chip size="small" color="grey-lighten-2">
+                  {{ formatDate(postItem.created_at) }}
+                </v-chip>
+                <v-btn
+                  icon="mdi-delete"
+                  size="small"
+                  variant="tonal"
+                  color="error"
+                  :loading="deletingPostId === postItem.id"
+                  @click="deletePost(postItem.id)"
+                ></v-btn>
+              </div>
             </template>
 
             <v-divider v-if="index < postsStore.posts.length - 1" class="mt-3"></v-divider>
@@ -125,6 +135,7 @@ const postsStore = usePostsStore();
 const form = ref<any>(null);
 const valid = ref<boolean>(false);
 const loading = ref<boolean>(false);
+const deletingPostId = ref<number | null>(null);
 const successMessage = ref<string>('');
 const errorMessage = ref<string>('');
 
@@ -211,6 +222,16 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+const deletePost = async (postId: number): Promise<void> => {
+  deletingPostId.value = postId;
+  const result = await postsStore.deletePost(postId);
+  deletingPostId.value = null;
+
+  if (!result.success) {
+    errorMessage.value = result.error || 'Failed to delete post';
+  }
+};
+
 </script>
 
 <style scoped>
@@ -220,6 +241,12 @@ const formatDate = (dateString: string): string => {
 
 .bg-secondary {
   background-color: #424242 !important;
+}
+
+.flex-center-gap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .text-wrap {
